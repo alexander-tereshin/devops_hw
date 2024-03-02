@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# Initialize variables
 source_path=""
 archive_name=""
-compiler_command=""
+compiler_commands=()
 
-while [[ $# -gt 0 ]]
-do
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
     case $1 in
         -s|--source)
             source_path=$2
@@ -16,7 +17,7 @@ do
             shift 2
             ;;
         -c|--compiler)
-            compiler_command=$2
+            compiler_commands+=("$2")
             shift 2
             ;;
         *)
@@ -26,45 +27,54 @@ do
     esac
 done
 
-if [[ -z $source_path || -z $archive_name || -z $compiler_command ]]; then
+# Check for missing parameters
+if [[ -z $source_path || -z $archive_name || ${#compiler_commands[@]} -eq 0 ]]; then
     missing_params=""
     if [[ -z $source_path ]]; then
-        missing_params+="source path, "
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="source_path"
     fi
     if [[ -z $archive_name ]]; then
-        missing_params+="archive name, "
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="archive_name"
     fi
-    if [[ -z $compiler_command ]]; then
-        missing_params+="compiler commands"
+    if [[ ${#compiler_commands[@]} -eq 0 ]]; then
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="compiler_commands"
     fi
     echo "Error: Missing required parameters: $missing_params"
     exit 1
 fi
 
+# Check if source directory exists
 if [[ ! -d $source_path ]]; then
     echo "Source directory not found: $source_path"
     exit 1
 fi
 
-mkdir temporary
-
-cp -R $source_path/* temporary || { echo "Failed to copy source files"; exit 1; }
-
+# Extract compiler and extensions
 compiler=$(echo "$compiler_command" | rev | cut -d '=' -f 1 | rev)
-
 extensions=$(echo "$compiler_command" | rev | cut -d '=' -f 2- | rev)
 
-old_IFS=$IFS
-
-IFS='='
+# Compile files with each extension
 for extension in $(echo "$extensions"); do
-    find temporary -type f -name "*.$extension" -exec sh -c '$compiler "$0" -o "$0.exe"' {} \; || { echo "Failed to compile files with extension $extension"; exit 1;}
+    find "$source_path" -type f -name "*.$extension" | while read -r file; do
+        destination="$archive_name/$(echo "$file" | cut -d/ -f 2-)"
+        mkdir -p "$(dirname "$destination")"
+        sh -c "$compiler -o $archive_name/\$(echo $file | cut -d/ -f 2- | cut -d. -f 1).exe $file"
     done
+done
 
-IFS=$old_IFS
+# Create tar.gz archive of compiled files
+tar -czf "$archive_name.tar.gz" $archive_name || { echo "Failed to create archive"; exit 1; }
 
-tar -czf "$archive_name.tar.gz" temporary || { echo "Failed to create archive"; exit 1; }
-
-rm -rf temporary
+# Eemove temporary directory
+rm -rf "$archive_name"
 
 echo "complete"
