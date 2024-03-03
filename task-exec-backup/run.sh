@@ -31,24 +31,15 @@ done
 if [[ -z $source_path || -z $archive_name || ${#compiler_commands[@]} -eq 0 ]]; then
     missing_params=""
     if [[ -z $source_path ]]; then
-        if [[ -n $missing_params ]]; then
-            missing_params+=", "
-        fi
-        missing_params+="source_path"
+        missing_params+="source_path, "
     fi
     if [[ -z $archive_name ]]; then
-        if [[ -n $missing_params ]]; then
-            missing_params+=", "
-        fi
-        missing_params+="archive_name"
+        missing_params+="archive_name, "
     fi
     if [[ ${#compiler_commands[@]} -eq 0 ]]; then
-        if [[ -n $missing_params ]]; then
-            missing_params+=", "
-        fi
-        missing_params+="compiler_commands"
+        missing_params+="compiler_commands, "
     fi
-    echo "Error: Missing required parameters: $missing_params"
+    echo "Error: Missing required parameters: ${missing_params%, }"
     exit 1
 fi
 
@@ -58,27 +49,27 @@ if [[ ! -d $source_path ]]; then
     exit 1
 fi
 
-for command in "${compiler_commands[@]}"; do
+# Create directory for compiled files
+mkdir -p "$archive_name" || { echo "Failed to create directory for compiled files"; exit 1; }
 
-# Extract compiler and extensions
-    compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
-    extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
+# Compile files with each compiler command
+for command in "${compiler_commands[@]}"; do
+    # Extract compiler and extensions
+    compiler=$(echo "$command" | cut -d '=' -f 2-)
+    extension=$(echo "$command" | cut -d '=' -f 1)
     
-    
-# Compile files with each extension
-    for extension in $(echo "$extensions"); do
-        find "$source_path" -type f -name "*.$extension" | while read -r file; do
-            destination="$archive_name/$(echo "$file" | cut -d/ -f 2-)"
-            mkdir -p "$(dirname "$destination")"
-            sh -c "$compiler -o $archive_name/\$(echo $file | cut -d/ -f 2- | cut -d. -f 1).exe $file"
-        done
+    # Compile files with specified extension
+    find "$source_path" -type f -name "*.$extension" -print0 | while IFS= read -r -d '' file; do
+        compiled_file="$archive_name/$(basename "${file%.*}").exe"
+        # Execute compiler command
+        $compiler -o "$compiled_file" "$file" || { echo "Failed to compile $file"; exit 1; }
     done
 done
 
 # Create tar.gz archive of compiled files
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
-# Remove temporary directory
+# Remove directory for compiled files
 rm -rf "$archive_name"
 
 echo "complete"
