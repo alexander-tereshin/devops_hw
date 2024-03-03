@@ -63,9 +63,8 @@ for command in "${compiler_commands[@]}"; do
 # Extract compiler and extensions
     compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
     extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
-    echo command: $command
-    echo compiler: $compiler
-
+    
+    
 # Compile files with each extension
     for extension in $(echo "$extensions"); do
         find "$source_path" -type f -name "*.$extension" | while read -r file; do
