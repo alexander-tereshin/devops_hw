@@ -31,15 +31,24 @@ done
 if [[ -z $source_path || -z $archive_name || ${#compiler_commands[@]} -eq 0 ]]; then
     missing_params=""
     if [[ -z $source_path ]]; then
-        missing_params+="source_path, "
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="source_path"
     fi
     if [[ -z $archive_name ]]; then
-        missing_params+="archive_name, "
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="archive_name"
     fi
     if [[ ${#compiler_commands[@]} -eq 0 ]]; then
-        missing_params+="compiler_commands, "
+        if [[ -n $missing_params ]]; then
+            missing_params+=", "
+        fi
+        missing_params+="compiler_commands"
     fi
-    echo "Error: Missing required parameters: ${missing_params%, }"
+    echo "Error: Missing required parameters: $missing_params"
     exit 1
 fi
 
