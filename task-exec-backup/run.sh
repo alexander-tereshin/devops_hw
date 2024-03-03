@@ -58,12 +58,14 @@ for command in "${compiler_commands[@]}"; do
     compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
     extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
     # Split extensions into an array
-    IFS='=' read -ra extension_array <<< "$extensions"
+    IFS=',' read -ra extension_array <<< "$extensions"
     # Compile files with each specified extension
     for extension in "${extension_array[@]}"; do
         find "$source_path" -type f -name "*.$extension" -print0 | while IFS= read -r -d '' file; do
             relative_path="${file#$source_path/}"
             compiled_file="$archive_name/${relative_path%.*}.exe" 
+            # Ensure directory structure exists for compiled file
+            mkdir -p "$(dirname "$compiled_file")"
             # Execute compiler command
             $compiler -o "$compiled_file" "$file" || { echo "Failed to compile $file"; exit 1; }
         done
@@ -71,8 +73,9 @@ for command in "${compiler_commands[@]}"; do
 done
 
 # Create tar.gz archive of compiled files
-tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
+tar -czf "$archive_name.tar.gz" -C "$archive_name" . || { echo "Failed to create archive"; exit 1; }
 
+# Remove compiled files directory
 rm -rf "$archive_name"
 
 echo "complete"
