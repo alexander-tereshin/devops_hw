@@ -58,21 +58,24 @@ if [[ ! -d $source_path ]]; then
     exit 1
 fi
 
+for command in "${compiler_commands[@]}"; do
+
 # Extract compiler and extensions
-compiler=$(echo "$compiler_command" | rev | cut -d '=' -f 1 | rev)
-extensions=$(echo "$compiler_command" | rev | cut -d '=' -f 2- | rev)
+    compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
+    extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
 
 # Compile files with each extension
-for extension in $(echo "$extensions"); do
-    find "$source_path" -type f -name "*.$extension" | while read -r file; do
-        destination="$archive_name/$(echo "$file" | cut -d/ -f 2-)"
-        mkdir -p "$(dirname "$destination")"
-        sh -c "$compiler -o $archive_name/\$(echo $file | cut -d/ -f 2- | cut -d. -f 1).exe $file"
+    for extension in $(echo "$extensions"); do
+        find "$source_path" -type f -name "*.$extension" | while read -r file; do
+            destination="$archive_name/$(echo "$file" | cut -d/ -f 2-)"
+            mkdir -p "$(dirname "$destination")"
+            sh -c "$compiler -o $archive_name/\$(echo $file | cut -d/ -f 2- | cut -d. -f 1).exe $file"
+        done
     done
 done
 
 # Create tar.gz archive of compiled files
-tar -czf "$archive_name.tar.gz" $archive_name || { echo "Failed to create archive"; exit 1; }
+tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
 # Eemove temporary directory
 rm -rf "$archive_name"
