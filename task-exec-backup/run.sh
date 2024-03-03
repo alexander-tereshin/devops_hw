@@ -80,6 +80,6 @@ done
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
 # Remove temporary directory
-# rm -rf "$archive_name"
+rm -rf "$archive_name"
 
 echo "complete"
