@@ -73,7 +73,7 @@ for command in "${compiler_commands[@]}"; do
 done
 
 # Create tar.gz archive of compiled files
-tar -czf "$archive_name.tar.gz" -C "$archive_name" . || { echo "Failed to create archive"; exit 1; }
+tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
 # Remove compiled files directory
 rm -rf "$archive_name"
