@@ -63,6 +63,8 @@ for command in "${compiler_commands[@]}"; do
 # Extract compiler and extensions
     compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
     extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
+    echo command: $command
+    echo compiler: $compiler
 
 # Compile files with each extension
     for extension in $(echo "$extensions"); do
@@ -78,6 +80,6 @@ done
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
 # Remove temporary directory
-rm -rf "$archive_name"
+# rm -rf "$archive_name"
 
 echo "complete"
