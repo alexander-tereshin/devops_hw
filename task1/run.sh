@@ -72,6 +72,6 @@ mkdir "$backup_folder"
 
 find "$input_folder" -name "*.$extension" | xargs -I {} cp {} "$backup_folder" 
 
-tar -czf "$backup_archive_name.tar.gz" "$backup_folder" || { echo "Failed to create archive"; exit 1; }
+tar -czf "$backup_folder/$backup_archive_name.tar.gz" "$backup_folder" || { echo "Failed to create archive"; exit 1; }
 
 echo "done"
