@@ -70,19 +70,8 @@ fi
 
 mkdir "$backup_folder"
 
-# Create a temporary directory
-temp_dir=$(mktemp -d)
+find "$input_folder" -name "*.$extension" | xargs -I {} cp {} "$backup_folder" 
 
-# Copy files to the temporary directory
-find "$input_folder" -name "*.$extension" -exec cp {} "$temp_dir" \;
-
-# Create the tar.gz archive
-tar -czf "$backup_archive_name.tar.gz" -C "$temp_dir" .
-
-# Move the archive to the backup folder
-mv "$backup_archive_name.tar.gz" "$backup_folder/"
-
-# Clean up the temporary directory
-rm -r "$temp_dir"
+tar -czf "$backup_archive_name" "$backup_folder" || { echo "Failed to create archive"; exit 1; }
 
 echo "done"
