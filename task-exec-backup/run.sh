@@ -77,7 +77,7 @@ done
 # Create tar.gz archive of compiled files
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
-# Eemove temporary directory
+# Remove temporary directory
 rm -rf "$archive_name"
 
 echo "complete"
