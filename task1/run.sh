@@ -70,7 +70,7 @@ fi
 
 mkdir "$backup_folder"
 
-find "$input_folder" -name "*.$extension" | xargs -I {} cp {} "$backup_folder" 
+find "$input_folder" -name "*.$extension" | xargs -I {} cp --parents {} "$backup_folder" 
 
 tar -czf "$backup_archive_name" "$backup_folder" || { echo "Failed to create archive"; exit 1; }
 
