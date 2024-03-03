@@ -58,26 +58,28 @@ if [[ ! -d $source_path ]]; then
     exit 1
 fi
 
+# Create temporary directory
+temp_dir=$(mktemp -d)
+
+# Compile files
 for command in "${compiler_commands[@]}"; do
+    # Extract compiler and extensions
+    compiler=$(echo "$command" | cut -d '=' -f 1)
+    extensions=$(echo "$command" | cut -d '=' -f 2-)
 
-# Extract compiler and extensions
-    compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
-    extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
-
-# Compile files with each extension
-    for extension in $(echo "$extensions"); do
+    # Compile files with each extension
+    for extension in $(echo "$extensions" | tr ',' ' '); do
         find "$source_path" -type f -name "*.$extension" | while read -r file; do
-            destination="$archive_name/$(echo "$file" | cut -d/ -f 2-)"
-            mkdir -p "$(dirname "$destination")"
-            sh -c "$compiler -o $archive_name/\$(echo $file | cut -d/ -f 2- | cut -d. -f 1).exe $file"
+            mkdir -p "$temp_dir/$(dirname "$file")"
+            $compiler -o "$temp_dir/${file%.*}.exe" "$file"
         done
     done
 done
 
 # Create tar.gz archive of compiled files
-tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
+tar -czf "$archive_name.tar.gz" -C "$temp_dir" . || { echo "Failed to create archive"; exit 1; }
 
 # Remove temporary directory
-rm -rf "$archive_name"
+rm -rf "$temp_dir"
 
 echo "complete"
