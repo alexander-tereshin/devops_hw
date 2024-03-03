@@ -55,16 +55,21 @@ mkdir -p "$archive_name" || { echo "Failed to create directory for compiled file
 # Compile files with each compiler command
 for command in "${compiler_commands[@]}"; do
     # Extract compiler and extensions
-    compiler=$(echo "$command" | cut -d '=' -f 2-)
-    extension=$(echo "$command" | cut -d '=' -f 1)
-    
-    # Compile files with specified extension
-    find "$source_path" -type f -name "*.$extension" -print0 | while IFS= read -r -d '' file; do
-        compiled_file="$archive_name/$(basename "${file%.*}").exe"
-        # Execute compiler command
-        $compiler -o "$compiled_file" "$file" || { echo "Failed to compile $file"; exit 1; }
+    compiler=$(echo "$command" | rev | cut -d '=' -f 1 | rev)
+    extensions=$(echo "$command" | rev | cut -d '=' -f 2- | rev)
+    # Split extensions into an array
+    IFS='=' read -ra extension_array <<< "$extensions"
+    # Compile files with each specified extension
+    for extension in "${extension_array[@]}"; do
+        find "$source_path" -type f -name "*.$extension" -print0 | while IFS= read -r -d '' file; do
+            compiled_file="$archive_name/$(basename "${file%.*}").exe"
+            # Execute compiler command
+            $compiler -o "$compiled_file" "$file" || { echo "Failed to compile $file"; exit 1; }
+        done
     done
 done
+
+
 
 # Create tar.gz archive of compiled files
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
