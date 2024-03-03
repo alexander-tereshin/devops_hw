@@ -62,19 +62,17 @@ for command in "${compiler_commands[@]}"; do
     # Compile files with each specified extension
     for extension in "${extension_array[@]}"; do
         find "$source_path" -type f -name "*.$extension" -print0 | while IFS= read -r -d '' file; do
-            compiled_file="$archive_name/$(basename "${file%.*}").exe"
+            relative_path="${file#$source_path/}"
+            compiled_file="$archive_name/${relative_path%.*}.exe" 
             # Execute compiler command
             $compiler -o "$compiled_file" "$file" || { echo "Failed to compile $file"; exit 1; }
         done
     done
 done
 
-
-
 # Create tar.gz archive of compiled files
 tar -czf "$archive_name.tar.gz" "$archive_name" || { echo "Failed to create archive"; exit 1; }
 
-# Remove directory for compiled files
 rm -rf "$archive_name"
 
 echo "complete"
